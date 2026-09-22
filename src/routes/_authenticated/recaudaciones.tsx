@@ -238,7 +238,7 @@ function Recaudaciones() {
                 <th className="px-3 py-2 text-left font-normal">Observaciones</th>
                 <th className="px-3 py-2 text-right font-normal">Importe</th>
                 <th className="px-3 py-2 text-right font-normal">Estado</th>
-                {esAdmin && <th className="px-3 py-2 text-right font-normal">Acción</th>}
+                <th className="px-3 py-2 text-right font-normal">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
