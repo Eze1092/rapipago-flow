@@ -98,20 +98,21 @@ export async function obtenerSerieDiaria(dias = 14) {
   return (data ?? []) as { fecha: string; total: number }[];
 }
 
+function rangoArgs(desde?: string, hasta?: string) {
+  const args: { _desde?: string; _hasta?: string } = {};
+  if (desde) args._desde = desde;
+  if (hasta) args._hasta = hasta;
+  return args;
+}
+
 export async function obtenerResumenPorBoca(desde?: string, hasta?: string) {
-  const { data, error } = await supabase.rpc("resumen_por_boca", {
-    _desde: desde ?? undefined,
-    _hasta: hasta ?? undefined,
-  });
+  const { data, error } = await supabase.rpc("resumen_por_boca", rangoArgs(desde, hasta));
   lanzar(error);
   return (data ?? []) as { boca_id: string; codigo: string; total: number; operaciones: number }[];
 }
 
 export async function obtenerResumenPorCajero(desde?: string, hasta?: string) {
-  const { data, error } = await supabase.rpc("resumen_por_cajero", {
-    _desde: desde ?? undefined,
-    _hasta: hasta ?? undefined,
-  });
+  const { data, error } = await supabase.rpc("resumen_por_cajero", rangoArgs(desde, hasta));
   lanzar(error);
   return (data ?? []) as { cajero: string; total: number; operaciones: number }[];
 }
@@ -208,10 +209,7 @@ export async function obtenerAjustes() {
 }
 
 export async function obtenerHistorial(desde?: string, hasta?: string) {
-  const { data, error } = await supabase.rpc("historial", {
-    _desde: desde ?? undefined,
-    _hasta: hasta ?? undefined,
-  });
+  const { data, error } = await supabase.rpc("historial", rangoArgs(desde, hasta));
   lanzar(error);
   return (data ?? []) as unknown as MovimientoHistorial[];
 }
