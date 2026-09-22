@@ -21,6 +21,7 @@ import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authen
 import { Route as AuthenticatedHistorialRouteImport } from './routes/_authenticated/historial'
 import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated/inicio'
 import { Route as AuthenticatedRecaudacionesRouteImport } from './routes/_authenticated/recaudaciones'
+import { Route as AuthenticatedReportesRouteImport } from './routes/_authenticated/reportes'
 import { Route as AuthenticatedRetirosRouteImport } from './routes/_authenticated/retiros'
 
 const IndexRoute = IndexRouteImport.update({
@@ -85,6 +86,11 @@ const AuthenticatedRecaudacionesRoute =
     path: '/recaudaciones',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedReportesRoute = AuthenticatedReportesRouteImport.update({
+  id: '/reportes',
+  path: '/reportes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRetirosRoute = AuthenticatedRetirosRouteImport.update({
   id: '/retiros',
   path: '/retiros',
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/historial': typeof AuthenticatedHistorialRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/recaudaciones': typeof AuthenticatedRecaudacionesRoute
+  '/reportes': typeof AuthenticatedReportesRoute
   '/retiros': typeof AuthenticatedRetirosRoute
 }
 export interface FileRoutesByTo {
@@ -117,6 +124,7 @@ export interface FileRoutesByTo {
   '/historial': typeof AuthenticatedHistorialRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/recaudaciones': typeof AuthenticatedRecaudacionesRoute
+  '/reportes': typeof AuthenticatedReportesRoute
   '/retiros': typeof AuthenticatedRetirosRoute
 }
 export interface FileRoutesById {
@@ -133,6 +141,7 @@ export interface FileRoutesById {
   '/_authenticated/historial': typeof AuthenticatedHistorialRoute
   '/_authenticated/inicio': typeof AuthenticatedInicioRoute
   '/_authenticated/recaudaciones': typeof AuthenticatedRecaudacionesRoute
+  '/_authenticated/reportes': typeof AuthenticatedReportesRoute
   '/_authenticated/retiros': typeof AuthenticatedRetirosRoute
 }
 export interface FileRouteTypes {
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/historial'
     | '/inicio'
     | '/recaudaciones'
+    | '/reportes'
     | '/retiros'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/historial'
     | '/inicio'
     | '/recaudaciones'
+    | '/reportes'
     | '/retiros'
   id:
     | '__root__'
@@ -178,6 +189,7 @@ export interface FileRouteTypes {
     | '/_authenticated/historial'
     | '/_authenticated/inicio'
     | '/_authenticated/recaudaciones'
+    | '/_authenticated/reportes'
     | '/_authenticated/retiros'
   fileRoutesById: FileRoutesById
 }
@@ -273,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRecaudacionesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/reportes': {
+      id: '/_authenticated/reportes'
+      path: '/reportes'
+      fullPath: '/reportes'
+      preLoaderRoute: typeof AuthenticatedReportesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/retiros': {
       id: '/_authenticated/retiros'
       path: '/retiros'
@@ -293,6 +312,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHistorialRoute: typeof AuthenticatedHistorialRoute
   AuthenticatedInicioRoute: typeof AuthenticatedInicioRoute
   AuthenticatedRecaudacionesRoute: typeof AuthenticatedRecaudacionesRoute
+  AuthenticatedReportesRoute: typeof AuthenticatedReportesRoute
   AuthenticatedRetirosRoute: typeof AuthenticatedRetirosRoute
 }
 
@@ -306,6 +326,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHistorialRoute: AuthenticatedHistorialRoute,
   AuthenticatedInicioRoute: AuthenticatedInicioRoute,
   AuthenticatedRecaudacionesRoute: AuthenticatedRecaudacionesRoute,
+  AuthenticatedReportesRoute: AuthenticatedReportesRoute,
   AuthenticatedRetirosRoute: AuthenticatedRetirosRoute,
 }
 

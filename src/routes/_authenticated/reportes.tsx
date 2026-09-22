@@ -58,10 +58,9 @@ function Reportes() {
   const total = filas.reduce((acc, m) => acc + Number(m.importe), 0);
 
   const exportar = () => {
-    descargarCSV(
-      `reporte-${f.desde || "inicio"}-${f.hasta || "hoy"}.csv`,
+    descargarCSV(`reporte-${f.desde || "inicio"}-${f.hasta || "hoy"}.csv`, [
       ["Fecha", "Tipo", "Boca", "Cajero", "Descripcion", "Importe", "Estado"],
-      filas.map((m) => [
+      ...filas.map((m) => [
         formatFecha(m.fecha),
         m.tipo,
         m.boca ?? "",
