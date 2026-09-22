@@ -197,6 +197,53 @@ function Recaudaciones() {
         </form>
       </Panel>
 
+      {editando && (
+        <Panel
+          titulo="Modificar recaudación"
+          extra={
+            <button className="btn-ghost" onClick={() => setEditando(null)}>
+              Cancelar
+            </button>
+          }
+        >
+          <form
+            className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!window.confirm(`¿Guardar el nuevo importe ${formatARS(parseImporte(editando.importe))}?`)) return;
+              editar.mutate();
+            }}
+          >
+            <Campo label="Fecha">
+              <input type="date" className="field" value={editando.fecha} onChange={(e) => setEditando({ ...editando, fecha: e.target.value })} required />
+            </Campo>
+            <Campo label="Boca">
+              <select className="field" value={editando.bocaId} onChange={(e) => setEditando({ ...editando, bocaId: e.target.value })} required>
+                {(bocas.data ?? []).map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.codigo}
+                  </option>
+                ))}
+              </select>
+            </Campo>
+            <Campo label="Cajero">
+              <input className="field" value={editando.cajero} onChange={(e) => setEditando({ ...editando, cajero: e.target.value })} maxLength={80} />
+            </Campo>
+            <Campo label="Importe (ARS)">
+              <input className="field" inputMode="decimal" value={editando.importe} onChange={(e) => setEditando({ ...editando, importe: e.target.value })} required />
+            </Campo>
+            <Campo label="Observaciones">
+              <input className="field" value={editando.observaciones} onChange={(e) => setEditando({ ...editando, observaciones: e.target.value })} maxLength={200} />
+            </Campo>
+            <div className="sm:col-span-2 lg:col-span-5">
+              <button className="btn-primary" disabled={editar.isPending}>
+                {editar.isPending ? "Guardando…" : "Guardar cambios"}
+              </button>
+            </div>
+          </form>
+        </Panel>
+      )}
+
       <Panel
         titulo="Listado"
         extra={
