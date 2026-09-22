@@ -253,9 +253,24 @@ function Recaudaciones() {
                   <td className="px-3 py-2.5 text-right">
                     <Tag estado={r.estado} texto={etiquetaEstado[r.estado] ?? r.estado} />
                   </td>
-                  {esAdmin && (
-                    <td className="px-3 py-2.5 text-right">
-                      {r.estado !== "ANULADO" && (
+                  <td className="px-3 py-2.5 text-right">
+                    {puedeEditar(r) && r.estado !== "ANULADO" ? (
+                      <div className="flex justify-end gap-2">
+                        <button
+                          className="btn-ghost"
+                          onClick={() =>
+                            setEditando({
+                              id: r.id,
+                              fecha: r.fecha,
+                              bocaId: r.boca_id,
+                              cajero: r.cajero_nombre ?? "",
+                              importe: String(r.importe),
+                              observaciones: r.observaciones ?? "",
+                            })
+                          }
+                        >
+                          Modificar
+                        </button>
                         <button
                           className="btn-ghost"
                           onClick={() => {
@@ -265,9 +280,11 @@ function Recaudaciones() {
                         >
                           Anular
                         </button>
-                      )}
-                    </td>
-                  )}
+                      </div>
+                    ) : (
+                      <span className="label-xs text-muted-foreground">-</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
