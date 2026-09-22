@@ -14,7 +14,11 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAcreditacionesRouteImport } from './routes/_authenticated/acreditaciones'
 import { Route as AuthenticatedBalanceRouteImport } from './routes/_authenticated/balance'
+import { Route as AuthenticatedBocasRouteImport } from './routes/_authenticated/bocas'
+import { Route as AuthenticatedCajerosRouteImport } from './routes/_authenticated/cajeros'
 import { Route as AuthenticatedCierresRouteImport } from './routes/_authenticated/cierres'
+import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authenticated/configuracion'
+import { Route as AuthenticatedHistorialRouteImport } from './routes/_authenticated/historial'
 import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated/inicio'
 import { Route as AuthenticatedRecaudacionesRouteImport } from './routes/_authenticated/recaudaciones'
 import { Route as AuthenticatedRetirosRouteImport } from './routes/_authenticated/retiros'
@@ -44,9 +48,30 @@ const AuthenticatedBalanceRoute = AuthenticatedBalanceRouteImport.update({
   path: '/balance',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBocasRoute = AuthenticatedBocasRouteImport.update({
+  id: '/bocas',
+  path: '/bocas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCajerosRoute = AuthenticatedCajerosRouteImport.update({
+  id: '/cajeros',
+  path: '/cajeros',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCierresRoute = AuthenticatedCierresRouteImport.update({
   id: '/cierres',
   path: '/cierres',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedConfiguracionRoute =
+  AuthenticatedConfiguracionRouteImport.update({
+    id: '/configuracion',
+    path: '/configuracion',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedHistorialRoute = AuthenticatedHistorialRouteImport.update({
+  id: '/historial',
+  path: '/historial',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedInicioRoute = AuthenticatedInicioRouteImport.update({
@@ -71,7 +96,11 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/acreditaciones': typeof AuthenticatedAcreditacionesRoute
   '/balance': typeof AuthenticatedBalanceRoute
+  '/bocas': typeof AuthenticatedBocasRoute
+  '/cajeros': typeof AuthenticatedCajerosRoute
   '/cierres': typeof AuthenticatedCierresRoute
+  '/configuracion': typeof AuthenticatedConfiguracionRoute
+  '/historial': typeof AuthenticatedHistorialRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/recaudaciones': typeof AuthenticatedRecaudacionesRoute
   '/retiros': typeof AuthenticatedRetirosRoute
@@ -81,7 +110,11 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/acreditaciones': typeof AuthenticatedAcreditacionesRoute
   '/balance': typeof AuthenticatedBalanceRoute
+  '/bocas': typeof AuthenticatedBocasRoute
+  '/cajeros': typeof AuthenticatedCajerosRoute
   '/cierres': typeof AuthenticatedCierresRoute
+  '/configuracion': typeof AuthenticatedConfiguracionRoute
+  '/historial': typeof AuthenticatedHistorialRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/recaudaciones': typeof AuthenticatedRecaudacionesRoute
   '/retiros': typeof AuthenticatedRetirosRoute
@@ -93,7 +126,11 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/acreditaciones': typeof AuthenticatedAcreditacionesRoute
   '/_authenticated/balance': typeof AuthenticatedBalanceRoute
+  '/_authenticated/bocas': typeof AuthenticatedBocasRoute
+  '/_authenticated/cajeros': typeof AuthenticatedCajerosRoute
   '/_authenticated/cierres': typeof AuthenticatedCierresRoute
+  '/_authenticated/configuracion': typeof AuthenticatedConfiguracionRoute
+  '/_authenticated/historial': typeof AuthenticatedHistorialRoute
   '/_authenticated/inicio': typeof AuthenticatedInicioRoute
   '/_authenticated/recaudaciones': typeof AuthenticatedRecaudacionesRoute
   '/_authenticated/retiros': typeof AuthenticatedRetirosRoute
@@ -105,7 +142,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/acreditaciones'
     | '/balance'
+    | '/bocas'
+    | '/cajeros'
     | '/cierres'
+    | '/configuracion'
+    | '/historial'
     | '/inicio'
     | '/recaudaciones'
     | '/retiros'
@@ -115,7 +156,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/acreditaciones'
     | '/balance'
+    | '/bocas'
+    | '/cajeros'
     | '/cierres'
+    | '/configuracion'
+    | '/historial'
     | '/inicio'
     | '/recaudaciones'
     | '/retiros'
@@ -126,7 +171,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/acreditaciones'
     | '/_authenticated/balance'
+    | '/_authenticated/bocas'
+    | '/_authenticated/cajeros'
     | '/_authenticated/cierres'
+    | '/_authenticated/configuracion'
+    | '/_authenticated/historial'
     | '/_authenticated/inicio'
     | '/_authenticated/recaudaciones'
     | '/_authenticated/retiros'
@@ -175,11 +224,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBalanceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/bocas': {
+      id: '/_authenticated/bocas'
+      path: '/bocas'
+      fullPath: '/bocas'
+      preLoaderRoute: typeof AuthenticatedBocasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cajeros': {
+      id: '/_authenticated/cajeros'
+      path: '/cajeros'
+      fullPath: '/cajeros'
+      preLoaderRoute: typeof AuthenticatedCajerosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/cierres': {
       id: '/_authenticated/cierres'
       path: '/cierres'
       fullPath: '/cierres'
       preLoaderRoute: typeof AuthenticatedCierresRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/configuracion': {
+      id: '/_authenticated/configuracion'
+      path: '/configuracion'
+      fullPath: '/configuracion'
+      preLoaderRoute: typeof AuthenticatedConfiguracionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/historial': {
+      id: '/_authenticated/historial'
+      path: '/historial'
+      fullPath: '/historial'
+      preLoaderRoute: typeof AuthenticatedHistorialRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/inicio': {
@@ -209,7 +286,11 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAcreditacionesRoute: typeof AuthenticatedAcreditacionesRoute
   AuthenticatedBalanceRoute: typeof AuthenticatedBalanceRoute
+  AuthenticatedBocasRoute: typeof AuthenticatedBocasRoute
+  AuthenticatedCajerosRoute: typeof AuthenticatedCajerosRoute
   AuthenticatedCierresRoute: typeof AuthenticatedCierresRoute
+  AuthenticatedConfiguracionRoute: typeof AuthenticatedConfiguracionRoute
+  AuthenticatedHistorialRoute: typeof AuthenticatedHistorialRoute
   AuthenticatedInicioRoute: typeof AuthenticatedInicioRoute
   AuthenticatedRecaudacionesRoute: typeof AuthenticatedRecaudacionesRoute
   AuthenticatedRetirosRoute: typeof AuthenticatedRetirosRoute
@@ -218,7 +299,11 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAcreditacionesRoute: AuthenticatedAcreditacionesRoute,
   AuthenticatedBalanceRoute: AuthenticatedBalanceRoute,
+  AuthenticatedBocasRoute: AuthenticatedBocasRoute,
+  AuthenticatedCajerosRoute: AuthenticatedCajerosRoute,
   AuthenticatedCierresRoute: AuthenticatedCierresRoute,
+  AuthenticatedConfiguracionRoute: AuthenticatedConfiguracionRoute,
+  AuthenticatedHistorialRoute: AuthenticatedHistorialRoute,
   AuthenticatedInicioRoute: AuthenticatedInicioRoute,
   AuthenticatedRecaudacionesRoute: AuthenticatedRecaudacionesRoute,
   AuthenticatedRetirosRoute: AuthenticatedRetirosRoute,
