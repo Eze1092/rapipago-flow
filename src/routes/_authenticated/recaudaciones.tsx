@@ -81,6 +81,45 @@ function Recaudaciones() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const [editando, setEditando] = useState<null | {
+    id: string;
+    fecha: string;
+    bocaId: string;
+    cajero: string;
+    importe: string;
+    observaciones: string;
+  }>(null);
+
+  const editar = useMutation({
+    mutationFn: async () => {
+      if (!editando) return;
+      const importe = parseImporte(editando.importe);
+      if (!Number.isFinite(importe) || importe <= 0) throw new Error("El importe debe ser mayor a cero");
+      const { error } = await supabase
+        .from("recaudaciones")
+        .update({
+          fecha: editando.fecha,
+          boca_id: editando.bocaId,
+          cajero_nombre: editando.cajero,
+          importe,
+          observaciones: editando.observaciones,
+        })
+        .eq("id", editando.id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("Recaudación modificada");
+      setEditando(null);
+      void qc.invalidateQueries();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  function puedeEditar(r: { created_by: string | null; cierre_id: string | null; estado: string }) {
+    if (esAdmin) return true;
+    return r.created_by === user?.id && !r.cierre_id && r.estado === "RECAUDADO";
+  }
+
   const filas = lista.data ?? [];
   const total = filas
     .filter((r) => r.estado !== "ANULADO")
@@ -158,6 +197,53 @@ function Recaudaciones() {
         </form>
       </Panel>
 
+      {editando && (
+        <Panel
+          titulo="Modificar recaudación"
+          extra={
+            <button className="btn-ghost" onClick={() => setEditando(null)}>
+              Cancelar
+            </button>
+          }
+        >
+          <form
+            className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!window.confirm(`¿Guardar el nuevo importe ${formatARS(parseImporte(editando.importe))}?`)) return;
+              editar.mutate();
+            }}
+          >
+            <Campo label="Fecha">
+              <input type="date" className="field" value={editando.fecha} onChange={(e) => setEditando({ ...editando, fecha: e.target.value })} required />
+            </Campo>
+            <Campo label="Boca">
+              <select className="field" value={editando.bocaId} onChange={(e) => setEditando({ ...editando, bocaId: e.target.value })} required>
+                {(bocas.data ?? []).map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.codigo}
+                  </option>
+                ))}
+              </select>
+            </Campo>
+            <Campo label="Cajero">
+              <input className="field" value={editando.cajero} onChange={(e) => setEditando({ ...editando, cajero: e.target.value })} maxLength={80} />
+            </Campo>
+            <Campo label="Importe (ARS)">
+              <input className="field" inputMode="decimal" value={editando.importe} onChange={(e) => setEditando({ ...editando, importe: e.target.value })} required />
+            </Campo>
+            <Campo label="Observaciones">
+              <input className="field" value={editando.observaciones} onChange={(e) => setEditando({ ...editando, observaciones: e.target.value })} maxLength={200} />
+            </Campo>
+            <div className="sm:col-span-2 lg:col-span-5">
+              <button className="btn-primary" disabled={editar.isPending}>
+                {editar.isPending ? "Guardando…" : "Guardar cambios"}
+              </button>
+            </div>
+          </form>
+        </Panel>
+      )}
+
       <Panel
         titulo="Listado"
         extra={
@@ -199,7 +285,7 @@ function Recaudaciones() {
                 <th className="px-3 py-2 text-left font-normal">Observaciones</th>
                 <th className="px-3 py-2 text-right font-normal">Importe</th>
                 <th className="px-3 py-2 text-right font-normal">Estado</th>
-                {esAdmin && <th className="px-3 py-2 text-right font-normal">Acción</th>}
+                <th className="px-3 py-2 text-right font-normal">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -214,9 +300,24 @@ function Recaudaciones() {
                   <td className="px-3 py-2.5 text-right">
                     <Tag estado={r.estado} texto={etiquetaEstado[r.estado] ?? r.estado} />
                   </td>
-                  {esAdmin && (
-                    <td className="px-3 py-2.5 text-right">
-                      {r.estado !== "ANULADO" && (
+                  <td className="px-3 py-2.5 text-right">
+                    {puedeEditar(r) && r.estado !== "ANULADO" ? (
+                      <div className="flex justify-end gap-2">
+                        <button
+                          className="btn-ghost"
+                          onClick={() =>
+                            setEditando({
+                              id: r.id,
+                              fecha: r.fecha,
+                              bocaId: r.boca_id,
+                              cajero: r.cajero_nombre ?? "",
+                              importe: String(r.importe),
+                              observaciones: r.observaciones ?? "",
+                            })
+                          }
+                        >
+                          Modificar
+                        </button>
                         <button
                           className="btn-ghost"
                           onClick={() => {
@@ -226,9 +327,11 @@ function Recaudaciones() {
                         >
                           Anular
                         </button>
-                      )}
-                    </td>
-                  )}
+                      </div>
+                    ) : (
+                      <span className="label-xs text-muted-foreground">-</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
