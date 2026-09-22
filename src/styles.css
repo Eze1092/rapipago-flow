@@ -5,17 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design system definition.
- *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ * Sistema de diseño — Rapipago Caja
+ * Paleta "ledger pop": papel cálido, tinta profunda y acentos saturados.
+ * Todos los colores se definen aquí como tokens semánticos (oklch).
  */
 
 @theme inline {
@@ -26,6 +18,12 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+
+  --font-display: var(--font-display-family);
+  --font-mono: var(--font-mono-family);
+  --font-body: var(--font-body-family);
+  --font-sans: var(--font-body-family);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -46,11 +44,24 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
+
+  --color-ink: var(--ink);
+  --color-cream: var(--cream);
+  --color-paper: var(--paper);
+  --color-flame: var(--flame);
+  --color-teal: var(--teal);
+  --color-gold: var(--gold);
+  --color-rose: var(--rose);
+  --color-royal: var(--royal);
+  --color-sky: var(--sky);
+  --color-line: var(--line);
+
+  --color-chart-1: var(--royal);
+  --color-chart-2: var(--flame);
+  --color-chart-3: var(--teal);
+  --color-chart-4: var(--gold);
+  --color-chart-5: var(--rose);
+
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -62,74 +73,51 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
-}
+  --radius: 0.875rem;
 
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  --font-display-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono-family: "Space Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-body-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --paper: oklch(0.944 0.0245 85.5);
+  --cream: oklch(0.968 0.0155 86);
+  --ink: oklch(0.213 0.0085 66);
+  --flame: oklch(0.632 0.2135 38.5);
+  --teal: oklch(0.444 0.0855 176);
+  --gold: oklch(0.766 0.1585 79);
+  --rose: oklch(0.529 0.2015 12.5);
+  --royal: oklch(0.452 0.2205 268);
+  --sky: oklch(0.674 0.1145 275);
+  --line: oklch(0.213 0.0085 66 / 12%);
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--cream);
+  --card-foreground: var(--ink);
+  --popover: var(--cream);
+  --popover-foreground: var(--ink);
+  --primary: var(--flame);
+  --primary-foreground: var(--ink);
+  --secondary: oklch(0.905 0.0215 85.5);
+  --secondary-foreground: var(--ink);
+  --muted: oklch(0.905 0.0215 85.5);
+  --muted-foreground: oklch(0.47 0.012 70);
+  --accent: var(--royal);
+  --accent-foreground: oklch(0.968 0.0155 86);
+  --destructive: var(--rose);
+  --destructive-foreground: oklch(0.968 0.0155 86);
+  --border: oklch(0.868 0.0195 85.5);
+  --input: oklch(0.868 0.0195 85.5);
+  --ring: var(--royal);
+
+  --sidebar: var(--ink);
+  --sidebar-foreground: var(--cream);
+  --sidebar-primary: var(--flame);
+  --sidebar-primary-foreground: var(--ink);
+  --sidebar-accent: oklch(0.28 0.01 66);
+  --sidebar-accent-foreground: var(--cream);
+  --sidebar-border: oklch(0.968 0.0155 86 / 15%);
+  --sidebar-ring: var(--royal);
 }
 
 @layer base {
@@ -140,5 +128,53 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-body-family);
+    -webkit-font-smoothing: antialiased;
   }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display-family);
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer utilities {
+  .tag {
+    @apply inline-flex items-center rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide;
+  }
+  .num {
+    @apply font-mono tabular-nums;
+  }
+  .label-xs {
+    @apply font-mono text-[10px] uppercase tracking-widest;
+  }
+  .surface {
+    @apply rounded-2xl bg-card ring-1 ring-black/5;
+  }
+  .field {
+    @apply w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-royal focus:ring-2 focus:ring-royal/30;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-flame px-4 py-2 text-sm font-semibold text-ink transition hover:bg-ink hover:text-cream disabled:opacity-50;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition hover:bg-ink/5 disabled:opacity-50;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.rise {
+  animation: rise 0.5s cubic-bezier(0.32, 0.72, 0, 1) both;
 }
