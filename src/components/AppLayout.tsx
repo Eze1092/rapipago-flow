@@ -9,6 +9,7 @@ import { fechaLarga, hoyISO } from "@/lib/format";
 const MENU = [
   { to: "/inicio", label: "Inicio" },
   { to: "/recaudaciones", label: "Recaudaciones" },
+  { to: "/cajeros_atm", label: "Cajero Automático" },
   { to: "/cierres", label: "Cierres" },
   { to: "/retiros", label: "Retiros" },
   { to: "/acreditaciones", label: "Acreditaciones" },
