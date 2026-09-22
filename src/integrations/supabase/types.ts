@@ -201,6 +201,59 @@ export type Database = {
         }
         Relationships: []
       }
+      movimientos_atm: {
+        Row: {
+          boca_id: string | null
+          created_at: string
+          created_by: string | null
+          estado: Database["public"]["Enums"]["estado_atm"]
+          fecha: string
+          hora: string
+          id: string
+          importe: number
+          observaciones: string
+          tipo: Database["public"]["Enums"]["tipo_atm"]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          boca_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          estado?: Database["public"]["Enums"]["estado_atm"]
+          fecha?: string
+          hora?: string
+          id?: string
+          importe: number
+          observaciones?: string
+          tipo?: Database["public"]["Enums"]["tipo_atm"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          boca_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          estado?: Database["public"]["Enums"]["estado_atm"]
+          fecha?: string
+          hora?: string
+          id?: string
+          importe?: number
+          observaciones?: string
+          tipo?: Database["public"]["Enums"]["tipo_atm"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movimientos_atm_boca_id_fkey"
+            columns: ["boca_id"]
+            isOneToOne: false
+            referencedRelation: "bocas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           activo: boolean
@@ -469,10 +522,12 @@ export type Database = {
     Enums: {
       app_role: "ADMIN" | "CAJERO"
       estado_acreditacion: "ACREDITADO" | "ANULADO"
+      estado_atm: "REGISTRADO" | "ANULADO"
       estado_cierre: "CERRADO" | "ANULADO"
       estado_recaudacion: "RECAUDADO" | "RETIRADO" | "ANULADO"
       estado_retiro: "PENDIENTE_ACREDITACION" | "ACREDITADO" | "ANULADO"
       tipo_ajuste: "POSITIVO" | "NEGATIVO"
+      tipo_atm: "CARGA" | "REINTEGRO"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -602,10 +657,12 @@ export const Constants = {
     Enums: {
       app_role: ["ADMIN", "CAJERO"],
       estado_acreditacion: ["ACREDITADO", "ANULADO"],
+      estado_atm: ["REGISTRADO", "ANULADO"],
       estado_cierre: ["CERRADO", "ANULADO"],
       estado_recaudacion: ["RECAUDADO", "RETIRADO", "ANULADO"],
       estado_retiro: ["PENDIENTE_ACREDITACION", "ACREDITADO", "ANULADO"],
       tipo_ajuste: ["POSITIVO", "NEGATIVO"],
+      tipo_atm: ["CARGA", "REINTEGRO"],
     },
   },
 } as const
