@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/configuracion")({
 });
 
 function Configuracion() {
-  const { perfil, rol, cerrarSesion } = useAuth();
+  const { perfil, rol } = useAuth();
 
   return (
     <AppLayout titulo="Configuración">
@@ -35,7 +35,14 @@ function Configuracion() {
             <dd className="mt-1 text-sm">{rol === "ADMIN" ? "Administrador" : "Cajero"}</dd>
           </div>
         </dl>
-        <button className="btn-ghost mt-4" onClick={() => void cerrarSesion()}>
+        <button
+          className="btn-ghost mt-4"
+          onClick={() => {
+            void supabase.auth.signOut().then(() => {
+              window.location.href = "/auth";
+            });
+          }}
+        >
           Cerrar sesión
         </button>
       </Panel>
