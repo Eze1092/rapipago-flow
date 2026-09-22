@@ -4,7 +4,7 @@ import { AppLayout, EstadoVacio, Panel, Tag } from "@/components/AppLayout";
 import { obtenerResumenPorCajero, obtenerUsuarios } from "@/lib/data";
 import { formatARS } from "@/lib/format";
 
-export const Route = { component: CajeroAtmComponent };
+export const Route = createFileRoute('/_authenticated/cajeros')({
   head: () => ({
     meta: [
       { title: "Cajeros — Rapipago Caja" },
