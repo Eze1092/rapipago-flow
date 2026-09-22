@@ -28,13 +28,14 @@ function Recaudaciones() {
   const [filtro, setFiltro] = useState({ desde: "", hasta: "", bocaId: "", cajero: "" });
   const lista = useQuery({
     queryKey: ["recaudaciones", filtro],
-    queryFn: () =>
-      obtenerRecaudaciones({
-        desde: filtro.desde || undefined,
-        hasta: filtro.hasta || undefined,
-        bocaId: filtro.bocaId || undefined,
-        cajero: filtro.cajero || undefined,
-      }),
+    queryFn: () => {
+      const args: { desde?: string; hasta?: string; bocaId?: string; cajero?: string } = {};
+      if (filtro.desde) args.desde = filtro.desde;
+      if (filtro.hasta) args.hasta = filtro.hasta;
+      if (filtro.bocaId) args.bocaId = filtro.bocaId;
+      if (filtro.cajero) args.cajero = filtro.cajero;
+      return obtenerRecaudaciones(args);
+    },
   });
 
   const [form, setForm] = useState({

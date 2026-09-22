@@ -69,7 +69,7 @@ function Reportes() {
         Number(m.importe).toFixed(2).replace(".", ","),
         etiquetaEstado[m.estado] ?? m.estado,
       ]),
-    );
+    ]);
   };
 
   const r = resumen.data;

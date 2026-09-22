@@ -89,7 +89,7 @@ function Historial() {
                     <span className="text-foreground">{a.accion}</span>
                     <span>{a.tabla}</span>
                     <span>{formatFechaHora(a.created_at)}</span>
-                    <span>{a.usuario_nombre ?? "Sistema"}</span>
+                    <span>{a.usuario_id ? `Usuario ${a.usuario_id.slice(0, 8)}` : "Sistema"}</span>
                   </div>
                   {a.valores_anteriores && (
                     <pre className="mt-2 overflow-x-auto rounded-lg bg-ink/5 p-2 font-mono text-[10px] leading-relaxed">
