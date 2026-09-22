@@ -81,6 +81,45 @@ function Recaudaciones() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const [editando, setEditando] = useState<null | {
+    id: string;
+    fecha: string;
+    bocaId: string;
+    cajero: string;
+    importe: string;
+    observaciones: string;
+  }>(null);
+
+  const editar = useMutation({
+    mutationFn: async () => {
+      if (!editando) return;
+      const importe = parseImporte(editando.importe);
+      if (!Number.isFinite(importe) || importe <= 0) throw new Error("El importe debe ser mayor a cero");
+      const { error } = await supabase
+        .from("recaudaciones")
+        .update({
+          fecha: editando.fecha,
+          boca_id: editando.bocaId,
+          cajero_nombre: editando.cajero,
+          importe,
+          observaciones: editando.observaciones,
+        })
+        .eq("id", editando.id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("Recaudación modificada");
+      setEditando(null);
+      void qc.invalidateQueries();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  function puedeEditar(r: { created_by: string | null; cierre_id: string | null; estado: string }) {
+    if (esAdmin) return true;
+    return r.created_by === user?.id && !r.cierre_id && r.estado === "RECAUDADO";
+  }
+
   const filas = lista.data ?? [];
   const total = filas
     .filter((r) => r.estado !== "ANULADO")
