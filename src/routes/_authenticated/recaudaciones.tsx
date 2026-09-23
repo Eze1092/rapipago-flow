@@ -32,18 +32,20 @@ function Recaudaciones() {
       const importe = parseImporte(v.importe);
       if (!Number.isFinite(importe) || importe <= 0) throw new Error("El importe debe ser mayor a cero");
       const codigo = v.boca.replace(/^PUESTO\s+/, "");
-      const bocaId = bocas.data?.find((b) => b.codigo === codigo)?.id ?? null;
+      const bocaId = bocas.data?.find((b) => b.codigo === codigo)?.id;
+      if (!bocaId) throw new Error("No se encontró la boca seleccionada");
       const payload = {
         fecha: v.fecha,
         boca_id: bocaId,
+        cajero_id: user?.id ?? null,
         cajero_nombre: v.cajero.trim() || perfil?.nombre || "Sin asignar",
         importe,
         observaciones: v.observaciones.trim(),
       };
-      // La base instalada no tiene la columna created_by; el trigger/RLS usa cajero_id.
+      // No enviar created_by, boca_manual ni cierre_id: no existen en la tabla instalada.
       const result = editando
         ? await supabase.from("recaudaciones").update(payload as never).eq("id", editando.id)
-        : await supabase.from("recaudaciones").insert({ ...payload, cajero_id: user?.id ?? null } as never);
+        : await supabase.from("recaudaciones").insert(payload as never);
       if (result.error) throw new Error(result.error.message);
     },
     onSuccess: () => {
@@ -60,19 +62,34 @@ function Recaudaciones() {
       const { error } = await supabase.from("recaudaciones").delete().eq("id", id);
       if (error) throw new Error(error.message);
     },
-    onSuccess: () => { toast.success("Recaudación eliminada"); setEditando(null); void qc.invalidateQueries({ queryKey: ["recaudaciones"] }); },
+    onSuccess: () => {
+      toast.success("Recaudación eliminada");
+      setEditando(null);
+      void qc.invalidateQueries({ queryKey: ["recaudaciones"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const filas = lista.data ?? [];
   const bocaTexto = (r: Fila) => (r as Fila & { boca_manual?: string }).boca_manual || r.bocas?.codigo || "-";
-  const puedeModificar = (r: Fila) => esAdmin || (r.estado !== "ANULADO" && !r.cierre_id && r.cajero_id === user?.id);
+  // El único usuario es administrador: puede modificar y eliminar cualquier fila.
+  const puedeModificar = (_r: Fila) => esAdmin;
   const iniciarEdicion = (r: Fila) => {
     const boca = bocaTexto(r);
-    setEditando({ id: r.id, fecha: r.fecha, boca: boca.startsWith("PUESTO") ? boca : `PUESTO ${boca}`, cajero: r.cajero_nombre ?? "", importe: String(r.importe), observaciones: r.observaciones ?? "" });
+    setEditando({
+      id: r.id,
+      fecha: r.fecha,
+      boca: boca.startsWith("PUESTO") ? boca : `PUESTO ${boca}`,
+      cajero: r.cajero_nombre ?? "",
+      importe: String(r.importe),
+      observaciones: r.observaciones ?? "",
+    });
   };
   const campo = editando ?? form;
-  const cambiar = (nombre: keyof Omit<Edicion, "id">, valor: string) => editando ? setEditando({ ...editando, [nombre]: valor }) : setForm({ ...form, [nombre]: valor });
+  const cambiar = (nombre: keyof Omit<Edicion, "id">, valor: string) => {
+    if (editando) setEditando({ ...editando, [nombre]: valor });
+    else setForm({ ...form, [nombre]: valor });
+  };
 
   return <AppLayout titulo="Recaudaciones">
     <Panel titulo={editando ? "Modificar recaudación" : "Registrar cobranza"} extra={editando && <button type="button" className="btn-ghost" onClick={() => setEditando(null)}>Cancelar</button>}>
