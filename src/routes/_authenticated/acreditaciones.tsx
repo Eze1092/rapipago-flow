@@ -78,6 +78,10 @@ function Acreditaciones() {
             className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5"
             onSubmit={(e) => {
               e.preventDefault();
+              if (!form.retiroId) {
+                toast.error("No hay retiros pendientes para acreditar");
+                return;
+              }
               if (!window.confirm(`¿Confirmás la acreditación de ${formatARS(parseImporte(form.importe))}?`)) return;
               alta.mutate();
             }}
@@ -86,9 +90,15 @@ function Acreditaciones() {
               <input type="date" className="field" value={form.fecha} onChange={(e) => setForm({ ...form, fecha: e.target.value })} required />
             </Campo>
             <Campo label="Retiro correspondiente">
-              <select className="field" value={form.retiroId} onChange={(e) => setForm({ ...form, retiroId: e.target.value })} required>
-                <option value="">Elegir…</option>
-                {(retiros.data ?? []).map((r) => (
+              <select
+                className="field"
+                value={form.retiroId}
+                onChange={(e) => setForm({ ...form, retiroId: e.target.value })}
+                required
+                disabled={pendientes.length === 0}
+              >
+                <option value="">{pendientes.length ? "Elegir…" : "No hay retiros pendientes"}</option>
+                {(pendientes ?? []).map((r) => (
                   <option key={r.id} value={r.id}>
                     {formatFecha(r.fecha)} · {formatARS(r.importe_retirado)} {r.remito ? `· ${r.remito}` : ""}
                   </option>
@@ -96,16 +106,16 @@ function Acreditaciones() {
               </select>
             </Campo>
             <Campo label="Importe acreditado">
-              <input className="field" inputMode="decimal" value={form.importe} onChange={(e) => setForm({ ...form, importe: e.target.value })} required />
+              <input className="field" inputMode="decimal" value={form.importe} onChange={(e) => setForm({ ...form, importe: e.target.value })} required disabled={pendientes.length === 0} />
             </Campo>
             <Campo label="N° de operación">
-              <input className="field" value={form.comprobante} onChange={(e) => setForm({ ...form, comprobante: e.target.value })} maxLength={50} />
+              <input className="field" value={form.comprobante} onChange={(e) => setForm({ ...form, comprobante: e.target.value })} maxLength={50} disabled={pendientes.length === 0} />
             </Campo>
             <Campo label="Observaciones">
-              <input className="field" value={form.observaciones} onChange={(e) => setForm({ ...form, observaciones: e.target.value })} maxLength={200} />
+              <input className="field" value={form.observaciones} onChange={(e) => setForm({ ...form, observaciones: e.target.value })} maxLength={200} disabled={pendientes.length === 0} />
             </Campo>
             <div className="sm:col-span-2 lg:col-span-5">
-              <button className="btn-primary" disabled={alta.isPending}>
+              <button className="btn-primary" disabled={alta.isPending || pendientes.length === 0}>
                 {alta.isPending ? "Registrando…" : "Registrar acreditación"}
               </button>
             </div>
