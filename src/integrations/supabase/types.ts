@@ -24,7 +24,7 @@ export type Database = {
           id: string
           importe: number
           observaciones: string
-          retiro_id: string
+          retiro_id: string | null
           updated_at: string
           updated_by: string | null
         }
@@ -37,7 +37,7 @@ export type Database = {
           id?: string
           importe: number
           observaciones?: string
-          retiro_id: string
+          retiro_id?: string | null
           updated_at?: string
           updated_by?: string | null
         }

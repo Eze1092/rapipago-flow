@@ -54,7 +54,7 @@ export type Retiro = {
 export type Acreditacion = {
   id: string;
   fecha_acreditacion: string;
-  retiro_id: string;
+  retiro_id: string | null;
   importe: number;
   comprobante: string;
   observaciones: string;
