@@ -9,7 +9,7 @@ import { etiquetaEstado, obtenerBocas, obtenerRecaudaciones } from "@/lib/data";
 import { formatARS, formatFecha, formatHora, hoyISO, parseImporte } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/recaudaciones")({ component: Recaudaciones });
-const OPCIONES_BOCA = ["PUESTO 41159", "PUESTO 42278"] as const;
+const OPCIONES_BOCA = ["", "PUESTO 41159", "PUESTO 42278"] as const;
 
 type Edicion = { id: string; fecha: string; boca: string; cajero: string; importe: string; observaciones: string };
 type Fila = Awaited<ReturnType<typeof obtenerRecaudaciones>>[number];
@@ -23,7 +23,7 @@ function Recaudaciones() {
     queryKey: ["recaudaciones", filtro],
     queryFn: () => obtenerRecaudaciones({ desde: filtro.desde || undefined, hasta: filtro.hasta || undefined, cajero: filtro.cajero || undefined }),
   });
-  const [form, setForm] = useState({ fecha: hoyISO(), boca: OPCIONES_BOCA[0], cajero: "", importe: "", observaciones: "" });
+  const [form, setForm] = useState({ fecha: hoyISO(), boca: "", cajero: "", importe: "", observaciones: "" });
   const [editando, setEditando] = useState<Edicion | null>(null);
 
   const guardar = useMutation({
@@ -31,9 +31,8 @@ function Recaudaciones() {
       const v = editando ?? form;
       const importe = parseImporte(v.importe);
       if (!Number.isFinite(importe) || importe <= 0) throw new Error("El importe debe ser mayor a cero");
-      const codigo = v.boca.replace(/^PUESTO\s+/, "");
-      const bocaId = bocas.data?.find((b) => b.codigo === codigo)?.id;
-      if (!bocaId) throw new Error("No se encontró la boca seleccionada");
+      const codigo = v.boca.replace(/^PUESTO\s+/, "").trim();
+      const bocaId = codigo ? bocas.data?.find((b) => b.codigo === codigo)?.id ?? null : null;
       const payload = {
         fecha: v.fecha,
         boca_id: bocaId,
@@ -42,7 +41,7 @@ function Recaudaciones() {
         importe,
         observaciones: v.observaciones.trim(),
       };
-      // No enviar created_by, boca_manual ni cierre_id: no existen en la tabla instalada.
+      // boca_id es opcional: cuando no se selecciona una boca se envía null.
       const result = editando
         ? await supabase.from("recaudaciones").update(payload as never).eq("id", editando.id)
         : await supabase.from("recaudaciones").insert(payload as never);
@@ -51,7 +50,7 @@ function Recaudaciones() {
     onSuccess: () => {
       toast.success(editando ? "Recaudación modificada" : "Recaudación registrada");
       setEditando(null);
-      setForm({ fecha: hoyISO(), boca: OPCIONES_BOCA[0], cajero: "", importe: "", observaciones: "" });
+      setForm({ fecha: hoyISO(), boca: "", cajero: "", importe: "", observaciones: "" });
       void qc.invalidateQueries({ queryKey: ["recaudaciones"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -71,15 +70,13 @@ function Recaudaciones() {
   });
 
   const filas = lista.data ?? [];
-  const bocaTexto = (r: Fila) => (r as Fila & { boca_manual?: string }).boca_manual || r.bocas?.codigo || "-";
-  // El único usuario es administrador: puede modificar y eliminar cualquier fila.
+  const bocaTexto = (r: Fila) => r.bocas?.codigo ? `PUESTO ${r.bocas.codigo}` : "Sin boca";
   const puedeModificar = (_r: Fila) => esAdmin;
   const iniciarEdicion = (r: Fila) => {
-    const boca = bocaTexto(r);
     setEditando({
       id: r.id,
       fecha: r.fecha,
-      boca: boca.startsWith("PUESTO") ? boca : `PUESTO ${boca}`,
+      boca: r.bocas?.codigo ? `PUESTO ${r.bocas.codigo}` : "",
       cajero: r.cajero_nombre ?? "",
       importe: String(r.importe),
       observaciones: r.observaciones ?? "",
@@ -95,7 +92,7 @@ function Recaudaciones() {
     <Panel titulo={editando ? "Modificar recaudación" : "Registrar cobranza"} extra={editando && <button type="button" className="btn-ghost" onClick={() => setEditando(null)}>Cancelar</button>}>
       <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5" onSubmit={(e) => { e.preventDefault(); guardar.mutate(); }}>
         <Campo label="Fecha"><input type="date" className="field" value={campo.fecha} onChange={(e) => cambiar("fecha", e.target.value)} required /></Campo>
-        <Campo label="Boca"><select className="field" value={campo.boca} onChange={(e) => cambiar("boca", e.target.value)}>{OPCIONES_BOCA.map((b) => <option key={b}>{b}</option>)}</select></Campo>
+        <Campo label="Boca (opcional)"><select className="field" value={campo.boca} onChange={(e) => cambiar("boca", e.target.value)}>{OPCIONES_BOCA.map((b) => <option key={b} value={b}>{b || "Sin boca"}</option>)}</select></Campo>
         <Campo label="Cajero"><input className="field" value={campo.cajero} placeholder={perfil?.nombre || "Cajero"} onChange={(e) => cambiar("cajero", e.target.value)} /></Campo>
         <Campo label="Importe (ARS)"><input className="field" inputMode="decimal" value={campo.importe} onChange={(e) => cambiar("importe", e.target.value)} required /></Campo>
         <Campo label="Observaciones"><input className="field" value={campo.observaciones} onChange={(e) => cambiar("observaciones", e.target.value)} /></Campo>
