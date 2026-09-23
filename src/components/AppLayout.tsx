@@ -15,7 +15,6 @@ const MENU = [
   { to: "/acreditaciones", label: "Acreditaciones" },
   { to: "/balance", label: "Balance" },
   { to: "/reportes", label: "Reportes" },
-  { to: "/cajeros", label: "Cajeros" },
   { to: "/bocas", label: "Bocas" },
   { to: "/historial", label: "Historial" },
   { to: "/configuracion", label: "Configuración" },
