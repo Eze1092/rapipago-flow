@@ -36,14 +36,14 @@ function Recaudaciones() {
       const payload = {
         fecha: v.fecha,
         boca_id: bocaId,
-        boca_manual: v.boca.trim(),
         cajero_nombre: v.cajero.trim() || perfil?.nombre || "Sin asignar",
         importe,
         observaciones: v.observaciones.trim(),
       };
+      // La base instalada no tiene la columna created_by; el trigger/RLS usa cajero_id.
       const result = editando
         ? await supabase.from("recaudaciones").update(payload as never).eq("id", editando.id)
-        : await supabase.from("recaudaciones").insert({ ...payload, cajero_id: user?.id ?? null, created_by: user?.id ?? null } as never);
+        : await supabase.from("recaudaciones").insert({ ...payload, cajero_id: user?.id ?? null } as never);
       if (result.error) throw new Error(result.error.message);
     },
     onSuccess: () => {
@@ -60,33 +60,19 @@ function Recaudaciones() {
       const { error } = await supabase.from("recaudaciones").delete().eq("id", id);
       if (error) throw new Error(error.message);
     },
-    onSuccess: () => {
-      toast.success("Recaudación eliminada");
-      setEditando(null);
-      void qc.invalidateQueries({ queryKey: ["recaudaciones"] });
-    },
+    onSuccess: () => { toast.success("Recaudación eliminada"); setEditando(null); void qc.invalidateQueries({ queryKey: ["recaudaciones"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const filas = lista.data ?? [];
   const bocaTexto = (r: Fila) => (r as Fila & { boca_manual?: string }).boca_manual || r.bocas?.codigo || "-";
-  const puedeModificar = (r: Fila) => esAdmin || (r.estado !== "ANULADO" && !r.cierre_id && (r.created_by === user?.id || r.cajero_id === user?.id));
+  const puedeModificar = (r: Fila) => esAdmin || (r.estado !== "ANULADO" && !r.cierre_id && r.cajero_id === user?.id);
   const iniciarEdicion = (r: Fila) => {
     const boca = bocaTexto(r);
-    setEditando({
-      id: r.id,
-      fecha: r.fecha,
-      boca: boca.startsWith("PUESTO") ? boca : `PUESTO ${boca}`,
-      cajero: r.cajero_nombre ?? "",
-      importe: String(r.importe),
-      observaciones: r.observaciones ?? "",
-    });
+    setEditando({ id: r.id, fecha: r.fecha, boca: boca.startsWith("PUESTO") ? boca : `PUESTO ${boca}`, cajero: r.cajero_nombre ?? "", importe: String(r.importe), observaciones: r.observaciones ?? "" });
   };
   const campo = editando ?? form;
-  const cambiar = (nombre: keyof Omit<Edicion, "id">, valor: string) => {
-    if (editando) setEditando({ ...editando, [nombre]: valor });
-    else setForm({ ...form, [nombre]: valor });
-  };
+  const cambiar = (nombre: keyof Omit<Edicion, "id">, valor: string) => editando ? setEditando({ ...editando, [nombre]: valor }) : setForm({ ...form, [nombre]: valor });
 
   return <AppLayout titulo="Recaudaciones">
     <Panel titulo={editando ? "Modificar recaudación" : "Registrar cobranza"} extra={editando && <button type="button" className="btn-ghost" onClick={() => setEditando(null)}>Cancelar</button>}>
