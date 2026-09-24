@@ -44,6 +44,48 @@ function Kpi({
   );
 }
 
+// Componentes auxiliares necesarios para renderizar el Dashboard
+function Barra({ titulo, valor, max, color }: { titulo: string; valor: number; max: number; color: string }) {
+  const porcentaje = max > 0 ? Math.min((valor / max) * 100, 100) : 0;
+  return (
+    <div>
+      <div className="flex justify-between text-xs font-mono mb-1">
+        <span className="text-muted-foreground">{titulo}</span>
+        <span className="font-bold">{formatARS(valor)}</span>
+      </div>
+      <div className="w-full bg-ink/10 h-2 rounded-full overflow-hidden">
+        <div className={`h-full ${color} rounded-full`} style={{ width: `${porcentaje}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function Tabla({ columnas, filas, vacio }: { columnas: string[]; filas: string[][]; vacio: string }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="label-xs text-muted-foreground border-b border-border">
+            {columnas.map((col, idx) => (
+              <th key={idx} className={`px-3 py-2 font-normal ${idx === columnas.length - 1 ? "text-right" : "text-left"}`}>{col}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+          {filas.map((fila, fIdx) => (
+            <tr key={fIdx} className="transition hover:bg-ink/5">
+              {fila.map((celda, cIdx) => (
+                <td key={cIdx} className={`px-3 py-2.5 ${cIdx === fila.length - 1 ? "num text-right font-medium" : ""}`}>{celda}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {filas.length === 0 && <p className="py-6 text-center text-xs text-muted-foreground">{vacio}</p>}
+    </div>
+  );
+}
+
 function Inicio() {
   const resumen = useQuery({ queryKey: ["resumen"], queryFn: obtenerResumen });
   const serie = useQuery({ queryKey: ["serie", 14], queryFn: () => obtenerSerieDiaria(14) });
@@ -59,12 +101,20 @@ function Inicio() {
 
   return (
     <AppLayout titulo="Inicio">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
+      {/* Ajustado el grid a 8 columnas en pantallas grandes para dar espacio a la nueva tarjeta */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
         <Kpi
           titulo="Recaudado hoy"
           valor={formatARS(r?.recaudado_hoy)}
-          nota={`Semana ${formatARS(r?.recaudado_semana)}`}
+          nota={`Semana: ${formatARS(r?.recaudado_semana)}`}
           clase="bg-ink text-cream"
+        />
+        {/* Nueva Tarjeta solicitada: Suma total de lo recaudado acumulado */}
+        <Kpi
+          titulo="Suma Total Recaudado"
+          valor={formatARS(r?.recaudado_total)}
+          nota="Histórico acumulado"
+          clase="bg-orange-600 text-white font-semibold ring-2 ring-orange-200"
         />
         <Kpi
           titulo="Pendiente de retiro"
@@ -104,7 +154,7 @@ function Inicio() {
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-5">
+      <div className="grid gap-4 lg:grid-cols-5 mt-4">
         <div className="lg:col-span-3">
           <Panel
             titulo="Recaudación diaria"
@@ -157,7 +207,7 @@ function Inicio() {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2 mt-4">
         <Panel titulo="Por boca">
           <Tabla
             columnas={["Boca", "Operaciones", "Total"]}
@@ -174,88 +224,19 @@ function Inicio() {
         </Panel>
       </div>
 
-      <Panel titulo="Últimos movimientos">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="label-xs text-muted-foreground">
-                <th className="px-3 py-2 text-left font-normal">Fecha</th>
-                <th className="px-3 py-2 text-left font-normal">Tipo</th>
-                <th className="px-3 py-2 text-left font-normal">Boca</th>
-                <th className="px-3 py-2 text-left font-normal">Cajero</th>
-                <th className="px-3 py-2 text-right font-normal">Importe</th>
-                <th className="px-3 py-2 text-right font-normal">Estado</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {(movimientos.data ?? []).slice(0, 10).map((m) => (
-                <tr key={`${m.tipo}-${m.id}`} className="transition hover:bg-ink/5">
-                  <td className="num px-3 py-2.5">{formatFecha(m.fecha)}</td>
-                  <td className="px-3 py-2.5">{m.tipo}</td>
-                  <td className="px-3 py-2.5">{m.boca ?? "-"}</td>
-                  <td className="px-3 py-2.5">{m.cajero ?? "-"}</td>
-                  <td className="num px-3 py-2.5 text-right">{formatARS(m.importe)}</td>
-                  <td className="px-3 py-2.5 text-right">
-                    <Tag estado={m.estado} texto={etiquetaEstado[m.estado] ?? m.estado} />
-                  </td>
+      <div className="mt-4">
+        <Panel titulo="Últimos movimientos">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="label-xs text-muted-foreground">
+                  <th className="px-3 py-2 text-left font-normal">Fecha</th>
+                  <th className="px-3 py-2 text-left font-normal">Tipo</th>
+                  <th className="px-3 py-2 text-left font-normal">Boca</th>
+                  <th className="px-3 py-2 text-left font-normal">Cajero</th>
+                  <th className="px-3 py-2 text-right font-normal">Importe</th>
+                  <th className="px-3 py-2 text-right font-normal">Estado</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          {(movimientos.data ?? []).length === 0 && <EstadoVacio texto="Sin movimientos registrados." />}
-        </div>
-      </Panel>
-    </AppLayout>
-  );
-}
-
-function Barra({ titulo, valor, max, color }: { titulo: string; valor: number; max: number; color: string }) {
-  const ancho = max > 0 ? Math.min(100, (valor / max) * 100) : 0;
-  return (
-    <div className="flex items-center gap-3">
-      <span className="label-xs w-28 shrink-0">{titulo}</span>
-      <div className="h-2.5 flex-1 rounded-full bg-ink/10">
-        <div className={`h-2.5 rounded-full ${color}`} style={{ width: `${ancho}%` }} />
-      </div>
-      <span className="num w-32 text-right text-xs">{formatARS(valor)}</span>
-    </div>
-  );
-}
-
-function Tabla({
-  columnas,
-  filas,
-  vacio,
-}: {
-  columnas: string[];
-  filas: string[][];
-  vacio: string;
-}) {
-  if (filas.length === 0) return <EstadoVacio texto={vacio} />;
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="label-xs text-muted-foreground">
-            {columnas.map((c, i) => (
-              <th key={c} className={`px-3 py-2 font-normal ${i === 0 ? "text-left" : "text-right"}`}>
-                {c}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {filas.map((fila, idx) => (
-            <tr key={idx} className="transition hover:bg-ink/5">
-              {fila.map((celda, i) => (
-                <td key={i} className={`px-3 py-2.5 ${i === 0 ? "" : "num text-right"}`}>
-                  {celda}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
+              </thead>
+              <tbody className="divide-y divide-border">
+                {(movimientos.data ?? []).slice(0, 10).map((m) => (
