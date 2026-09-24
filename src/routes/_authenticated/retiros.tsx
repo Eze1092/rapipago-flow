@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { etiquetaEstado, obtenerBocas, obtenerRetiros } from "@/lib/data";
 import { formatARS, formatFecha, formatHora, hoyISO, parseImporte } from "@/lib/format";
+import { Pencil, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/retiros")({
   head: () => ({
@@ -29,6 +30,10 @@ function Retiros() {
   
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [form, setForm] = useState({ fecha: hoyISO(), declarado: "", retirado: "", remito: "", observaciones: "", bocas: [] as string[] });
+
+  // Estados para los filtros de fecha
+  const [desde, setDesde] = useState("");
+  const [hasta, setHasta] = useState("");
 
   // MUTACIÓN PARA REGISTRAR O EDITAR RETIRO
   const alta = useMutation({
@@ -115,6 +120,17 @@ function Retiros() {
 
   const filas = lista.data ?? [];
 
+  // Lógica de filtrado por fechas en frontend
+  const filasFiltradas = filas.filter((r: any) => {
+    if (desde && r.fecha < desde) return false;
+    if (hasta && r.fecha > hasta) return false;
+    return true;
+  });
+
+  // Sumas dinámicas de lo que queda filtrado en pantalla
+  const totalDeclaradoFiltrado = filasFiltradas.reduce((acc, r: any) => acc + (Number(r.importe_declarado) || 0), 0);
+  const totalRetiradoFiltrado = filasFiltradas.reduce((acc, r: any) => acc + (Number(r.importe_retirado) || 0), 0);
+
   return (
     <AppLayout titulo="Retiros del camión">
       {esAdmin && (
@@ -133,9 +149,36 @@ function Retiros() {
           </form>
         </Panel>
       )}
-      <Panel titulo="Retiros registrados" extra={<span className="label-xs text-muted-foreground">{filas.length} registros</span>}>
-        <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="label-xs text-muted-foreground"><th className="px-3 py-2 text-left font-normal">Fecha</th><th className="px-3 py-2 text-left font-normal">Hora</th><th className="px-3 py-2 text-left font-normal">Bocas</th><th className="px-3 py-2 text-left font-normal">Remito</th><th className="px-3 py-2 text-right font-normal">Declarado</th><th className="px-3 py-2 text-right font-normal">Retirado</th><th className="px-3 py-2 text-right font-normal">Acreditado</th><th className="px-3 py-2 text-right font-normal">Estado</th>{esAdmin && <th className="px-3 py-2 text-center font-normal">Acciones</th>}</tr></thead><tbody className="divide-y divide-border">{filas.map((r) => { const acreditado = (r.acreditaciones ?? []).filter((a) => a.estado !== "ANULADO").reduce((acc, a) => acc + Number(a.importe), 0); return <tr key={r.id} className="transition hover:bg-ink/5"><td className="num px-3 py-2.5">{formatFecha(r.fecha)}</td><td className="num px-3 py-2.5">{formatHora(r.hora)}</td><td className="px-3 py-2.5">{(r.retiro_bocas ?? []).map((rb) => rb.bocas?.codigo).filter(Boolean).join(" + ") || "Sin boca"}</td><td className="px-3 py-2.5">{r.remito || "-"}</td><td className="num px-3 py-2.5 text-right">{formatARS(r.importe_declarado)}</td><td className="num px-3 py-2.5 text-right">{formatARS(r.importe_retirado)}</td><td className="num px-3 py-2.5 text-right">{formatARS(acreditado)}</td><td className="px-3 py-2.5 text-right"><Tag estado={r.estado} texto={etiquetaEstado[r.estado] ?? r.estado} /></td>{esAdmin && <td className="px-3 py-2 text-center space-x-1 whitespace-nowrap"><button className="btn-ghost py-0.5 text-xs" onClick={() => activarEdicion(r)}>Editar</button><button className="btn-ghost py-0.5 text-xs text-rose hover:bg-rose/10" disabled={eliminar.isPending} onClick={() => { if (window.confirm("¿Seguro que querés eliminar este retiro?")) eliminar.mutate(r.id); }}>Eliminar</button></td>}</tr>; })}</tbody></table>{filas.length === 0 && <EstadoVacio texto="Todavía no se registraron retiros." />}</div>
-      </Panel>
-    </AppLayout>
-  );
-}
+
+      <Panel titulo="Retiros registrados" extra={<span className="label-xs text-muted-foreground">{filasFiltradas.length} registros</span>}>
+        {/* Contenedor de Filtros por Fecha */}
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 items-end mb-4 bg-muted/40 p-3 rounded-lg border border-border">
+          <label className="block">
+            <span className="label-xs text-muted-foreground">Desde</span>
+            <input type="date" className="field mt-1" value={desde} onChange={(e) => setDesde(e.target.value)} />
+          </label>
+          <label className="block">
+            <span className="label-xs text-muted-foreground">Hasta</span>
+            <input type="date" className="field mt-1" value={hasta} onChange={(e) => setHasta(e.target.value)} />
+          </label>
+          {(desde || hasta) && (
+            <button className="btn-ghost text-xs self-center sm:col-span-2 md:col-span-1 md:mt-5 text-rose h-10" onClick={() => { setDesde(""); setHasta(""); }}>
+              Limpiar filtros
+            </button>
+          )}
+        </div>
+
+        {/* Recuadro de los Totales Acumulados del período */}
+        <div className="grid gap-4 sm:grid-cols-2 my-4 p-4 bg-orange-50 border border-orange-200 rounded-lg shadow-sm">
+          <div className="flex justify-between items-center border-b sm:border-b-0 sm:border-r border-orange-200 pb-2 sm:pb-0 sm:pr-4">
+            <span className="text-sm font-semibold text-gray-700">Total Declarado:</span>
+            <span className="text-lg font-bold text-amber-700">{formatARS(totalDeclaradoFiltrado)}</span>
+          </div>
+          <div className="flex justify-between items-center sm:pl-4">
+            <span className="text-sm font-semibold text-gray-700">Total Retirado:</span>
+            <span className="text-lg font-bold text-orange-600">{formatARS(totalRetiradoFiltrado)}</span>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
