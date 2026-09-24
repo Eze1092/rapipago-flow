@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { etiquetaEstado, obtenerAcreditaciones } from "@/lib/data";
 import { formatARS, formatFecha, hoyISO, parseImporte } from "@/lib/format";
+import { Pencil, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/acreditaciones")({
   head: () => ({
@@ -33,6 +34,10 @@ function Acreditaciones() {
     comprobante: "",
     observaciones: "",
   });
+
+  // Estados para los filtros de fecha
+  const [desde, setDesde] = useState("");
+  const [hasta, setHasta] = useState("");
 
   // MUTACIÓN PARA REGISTRAR O MODIFICAR ACREDITACIÓN
   const alta = useMutation({
@@ -98,10 +103,27 @@ function Acreditaciones() {
 
   const filas = lista.data ?? [];
 
+  // Lógica de filtrado dinámico por fechas en frontend
+  const filasFiltradas = filas.filter((a: any) => {
+    if (!a.fecha_acreditacion) return true;
+    const fechaSolo = a.fecha_acreditacion.substring(0, 10);
+    if (desde && fechaSolo < desde) return false;
+    if (hasta && fechaSolo > hasta) return false;
+    return true;
+  });
+
+  // Cálculos acumulados dinámicos
+  const totalAcreditadoFiltrado = filasFiltradas.reduce((acc, a: any) => acc + (Number(a.importe) || 0), 0);
+  const totalDiferenciaFiltrada = filasFiltradas.reduce((acc, a: any) => {
+    const retirado = a.retiros ? Number(a.retiros.importe_retirado) : null;
+    if (retirado === null) return acc;
+    return acc + (Number(a.importe) - retirado);
+  }, 0);
+
   return (
     <AppLayout titulo="Acreditaciones">
       {esAdmin && (
-        <Panel titulo={editandoId ? "Modificar acreditación registrada" : "Registrar acreditación"}>
+        <Panel titulo={editandoId ? "Modificar accreditation registrada" : "Registrar acreditación"}>
           <form
             className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
             onSubmit={(e) => {
@@ -143,7 +165,38 @@ function Acreditaciones() {
         </Panel>
       )}
 
-      <Panel titulo="Acreditaciones registradas">
+      <Panel titulo="Acreditaciones registradas" extra={<span className="label-xs text-muted-foreground">{filasFiltradas.length} registros</span>}>
+        {/* Sección de Filtros por Fecha */}
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 items-end mb-4 bg-muted/40 p-3 rounded-lg border border-border">
+          <label className="block">
+            <span className="label-xs text-muted-foreground">Desde</span>
+            <input type="date" className="field mt-1" value={desde} onChange={(e) => setDesde(e.target.value)} />
+          </label>
+          <label className="block">
+            <span className="label-xs text-muted-foreground">Hasta</span>
+            <input type="date" className="field mt-1" value={hasta} onChange={(e) => setHasta(e.target.value)} />
+          </label>
+          {(desde || hasta) && (
+            <button className="btn-ghost text-xs self-center sm:col-span-2 md:col-span-1 md:mt-5 text-rose h-10" onClick={() => { setDesde(""); setHasta(""); }}>
+              Limpiar filtros
+            </button>
+          )}
+        </div>
+
+        {/* Recuadro de los Totales Acumulados */}
+        <div className="grid gap-4 sm:grid-cols-2 my-4 p-4 bg-orange-50 border border-orange-200 rounded-lg shadow-sm">
+          <div className="flex justify-between items-center border-b sm:border-b-0 sm:border-r border-orange-200 pb-2 sm:pb-0 sm:pr-4">
+            <span className="text-sm font-semibold text-gray-700">Total Acreditado:</span>
+            <span className="text-lg font-bold text-orange-600">{formatARS(totalAcreditadoFiltrado)}</span>
+          </div>
+          <div className="flex justify-between items-center sm:pl-4">
+            <span className="text-sm font-semibold text-gray-700">Diferencia Acumulada:</span>
+            <span className={`text-lg font-bold ${totalDiferenciaFiltrada < 0 ? "text-rose-600" : "text-emerald-600"}`}>
+              {formatARS(totalDiferenciaFiltrada)}
+            </span>
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -159,46 +212,9 @@ function Acreditaciones() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filas.map((a) => {
+              {filasFiltradas.map((a: any) => {
                 const retirado = a.retiros ? Number(a.retiros.importe_retirado) : null;
                 const diferencia = retirado === null ? null : Number(a.importe) - retirado;
                 return (
                   <tr key={a.id} className="transition hover:bg-ink/5">
                     <td className="num px-3 py-2.5">{formatFecha(a.fecha_acreditacion)}</td>
-                    <td className="num px-3 py-2.5">{a.retiros ? formatFecha(a.retiros.fecha) : "-"}</td>
-                    <td className="px-3 py-2.5">{a.comprobante || "-"}</td>
-                    <td className="num px-3 py-2.5 text-right">{retirado === null ? "-" : formatARS(retirado)}</td>
-                    <td className="num px-3 py-2.5 text-right">{formatARS(a.importe)}</td>
-                    <td className={`num px-3 py-2.5 text-right ${diferencia !== null && diferencia < 0 ? "text-rose" : ""}`}>
-                      {diferencia === null ? "-" : formatARS(diferencia)}
-                    </td>
-                    <td className="px-3 py-2.5 text-right">
-                      <Tag estado={a.estado} texto={etiquetaEstado[a.estado] ?? a.estado} />
-                    </td>
-                    {esAdmin && (
-                      <td className="px-3 py-2 text-center space-x-1 whitespace-nowrap">
-                        <button className="btn-ghost py-0.5 text-xs" onClick={() => activarEdicion(a)}>
-                          Editar
-                        </button>
-                        <button
-                          className="btn-ghost py-0.5 text-xs text-rose hover:bg-rose/10"
-                          disabled={eliminar.isPending}
-                          onClick={() => {
-                            if (window.confirm("¿Seguro que querés eliminar esta acreditación?")) eliminar.mutate(a.id);
-                          }}
-                        >
-                          Eliminar
-                        </button>
-                      </td>
-                    )}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          {filas.length === 0 && <EstadoVacio texto="Todavía no hay acreditaciones registradas." />}
-        </div>
-      </Panel>
-    </AppLayout>
-  );
-}
