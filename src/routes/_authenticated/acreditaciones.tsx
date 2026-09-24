@@ -26,6 +26,7 @@ function Acreditaciones() {
   const qc = useQueryClient();
   const lista = useQuery({ queryKey: ["acreditaciones"], queryFn: obtenerAcreditaciones });
 
+  const [editandoId, setEditandoId] = useState<string | null>(null);
   const [form, setForm] = useState({
     fecha: hoyISO(),
     importe: "",
@@ -33,40 +34,79 @@ function Acreditaciones() {
     observaciones: "",
   });
 
+  // MUTACIÓN PARA REGISTRAR O MODIFICAR ACREDITACIÓN
   const alta = useMutation({
     mutationFn: async () => {
       const importe = parseImporte(form.importe);
       if (!Number.isFinite(importe) || importe < 0) throw new Error("Importe inválido");
 
-      const { error } = await supabase.from("acreditaciones").insert({
-        fecha_acreditacion: form.fecha,
-        importe,
-        comprobante: form.comprobante,
-        observaciones: form.observaciones,
-      });
-      if (error) throw new Error(error.message);
+      if (editandoId) {
+        // Modo Edición
+        const { error } = await supabase
+          .from("acreditaciones")
+          .update({
+            fecha_acreditacion: form.fecha,
+            importe,
+            comprobante: form.comprobante,
+            observaciones: form.observaciones,
+          })
+          .eq("id", editandoId);
+        if (error) throw new Error(error.message);
+      } else {
+        // Modo Registro Nuevo
+        const { error } = await supabase.from("acreditaciones").insert({
+          fecha_acreditacion: form.fecha,
+          importe,
+          comprobante: form.comprobante,
+          observaciones: form.observaciones,
+        });
+        if (error) throw new Error(error.message);
+      }
     },
     onSuccess: () => {
-      toast.success("Acreditación registrada");
+      toast.success(editandoId ? "Acreditación modificada" : "Acreditación registrada con éxito");
       setForm({ fecha: hoyISO(), importe: "", comprobante: "", observaciones: "" });
+      setEditandoId(null);
       void qc.invalidateQueries();
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  // MUTACIÓN PARA ELIMINAR ACREDITACIÓN
+  const eliminar = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("acreditaciones").delete().eq("id", id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("Acreditación eliminada");
+      void qc.invalidateQueries();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const activarEdicion = (a: any) => {
+    setEditandoId(a.id);
+    setForm({
+      fecha: a.fecha_acreditacion ? a.fecha_acreditacion.substring(0, 10) : hoyISO(),
+      importe: String(a.importe),
+      comprobante: a.comprobante || "",
+      observaciones: a.observaciones || "",
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const filas = lista.data ?? [];
 
   return (
     <AppLayout titulo="Acreditaciones">
       {esAdmin && (
-        <Panel
-          titulo="Registrar acreditación"
-        >
+        <Panel titulo={editandoId ? "Modificar acreditación registrada" : "Registrar acreditación"}>
           <form
             className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
             onSubmit={(e) => {
               e.preventDefault();
-              if (!window.confirm(`¿Confirmás la acreditación de ${formatARS(parseImporte(form.importe))}?`)) return;
+              if (!window.confirm(`¿Confirmás los datos de esta acreditación por ${formatARS(parseImporte(form.importe))}?`)) return;
               alta.mutate();
             }}
           >
@@ -82,10 +122,22 @@ function Acreditaciones() {
             <Campo label="Observaciones">
               <input className="field" value={form.observaciones} onChange={(e) => setForm({ ...form, observaciones: e.target.value })} maxLength={200} />
             </Campo>
-            <div className="sm:col-span-2 lg:col-span-4">
+            <div className="sm:col-span-2 lg:col-span-4 flex gap-2">
               <button className="btn-primary" disabled={alta.isPending}>
-                {alta.isPending ? "Registrando…" : "Registrar acreditación"}
+                {alta.isPending ? "Procesando…" : editandoId ? "Guardar cambios" : "Registrar acreditación"}
               </button>
+              {editandoId && (
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() => {
+                    setEditandoId(null);
+                    setForm({ fecha: hoyISO(), importe: "", comprobante: "", observaciones: "" });
+                  }}
+                >
+                  Cancelar
+                </button>
+              )}
             </div>
           </form>
         </Panel>
@@ -103,6 +155,7 @@ function Acreditaciones() {
                 <th className="px-3 py-2 text-right font-normal">Acreditado</th>
                 <th className="px-3 py-2 text-right font-normal">Diferencia</th>
                 <th className="px-3 py-2 text-right font-normal">Estado</th>
+                {esAdmin && <th className="px-3 py-2 text-center font-normal">Acciones</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -122,6 +175,22 @@ function Acreditaciones() {
                     <td className="px-3 py-2.5 text-right">
                       <Tag estado={a.estado} texto={etiquetaEstado[a.estado] ?? a.estado} />
                     </td>
+                    {esAdmin && (
+                      <td className="px-3 py-2 text-center space-x-1 whitespace-nowrap">
+                        <button className="btn-ghost py-0.5 text-xs" onClick={() => activarEdicion(a)}>
+                          Editar
+                        </button>
+                        <button
+                          className="btn-ghost py-0.5 text-xs text-rose hover:bg-rose/10"
+                          disabled={eliminar.isPending}
+                          onClick={() => {
+                            if (window.confirm("¿Seguro que querés eliminar esta acreditación?")) eliminar.mutate(a.id);
+                          }}
+                        >
+                          Eliminar
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
