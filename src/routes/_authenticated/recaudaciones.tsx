@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { AppLayout, EstadoVacio, Panel, Tag } from "@/components/AppLayout";
+import { AppLayout, EstadoVacio, Panel, RecuadroTotal, Tag } from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { etiquetaEstado, obtenerBocas, obtenerRecaudaciones } from "@/lib/data";
@@ -21,7 +21,11 @@ function Recaudaciones() {
   const [filtro, setFiltro] = useState({ desde: "", hasta: "", cajero: "" });
   const lista = useQuery({
     queryKey: ["recaudaciones", filtro],
-    queryFn: () => obtenerRecaudaciones({ desde: filtro.desde || undefined, hasta: filtro.hasta || undefined, cajero: filtro.cajero || undefined }),
+    queryFn: () => obtenerRecaudaciones({
+      ...(filtro.desde ? { desde: filtro.desde } : {}),
+      ...(filtro.hasta ? { hasta: filtro.hasta } : {}),
+      ...(filtro.cajero ? { cajero: filtro.cajero } : {}),
+    }),
   });
   const [form, setForm] = useState({ fecha: hoyISO(), boca: "", cajero: "", importe: "", observaciones: "" });
   const [editando, setEditando] = useState<Edicion | null>(null);
@@ -70,6 +74,7 @@ function Recaudaciones() {
   });
 
   const filas = lista.data ?? [];
+  const totalRecaudadoFiltrado = filas.reduce((acc: number, r: Fila) => acc + Number(r.importe ?? 0), 0);
   const bocaTexto = (r: Fila) => r.bocas?.codigo ? `PUESTO ${r.bocas.codigo}` : "Sin boca";
   const puedeModificar = (_r: Fila) => esAdmin;
   const iniciarEdicion = (r: Fila) => {
@@ -101,6 +106,7 @@ function Recaudaciones() {
     </Panel>
     <Panel titulo="Listado" extra={<span className="label-xs text-muted-foreground">{filas.length} registros</span>}>
       <div className="mb-4 grid gap-3 sm:grid-cols-3"><Campo label="Desde"><input type="date" className="field" value={filtro.desde} onChange={(e) => setFiltro({ ...filtro, desde: e.target.value })} /></Campo><Campo label="Hasta"><input type="date" className="field" value={filtro.hasta} onChange={(e) => setFiltro({ ...filtro, hasta: e.target.value })} /></Campo><Campo label="Cajero"><input className="field" value={filtro.cajero} onChange={(e) => setFiltro({ ...filtro, cajero: e.target.value })} /></Campo></div>
+      <RecuadroTotal etiqueta="Total Recaudado en el período:" total={totalRecaudadoFiltrado} />
       <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="label-xs text-muted-foreground"><th className="px-3 py-2 text-left">Fecha</th><th className="px-3 py-2 text-left">Boca</th><th className="px-3 py-2 text-left">Cajero</th><th className="px-3 py-2 text-right">Importe</th><th className="px-3 py-2 text-right">Estado</th><th className="px-3 py-2 text-right">Acciones</th></tr></thead><tbody className="divide-y divide-border">{filas.map((r) => <tr key={r.id}><td className="px-3 py-2">{formatFecha(r.fecha)} {formatHora(r.hora)}</td><td className="px-3 py-2">{bocaTexto(r)}</td><td className="px-3 py-2">{r.cajero_nombre || "-"}</td><td className="num px-3 py-2 text-right">{formatARS(r.importe)}</td><td className="px-3 py-2 text-right"><Tag estado={r.estado} texto={etiquetaEstado[r.estado] ?? r.estado} /></td><td className="px-3 py-2 text-right">{puedeModificar(r) && <><button type="button" className="btn-ghost mr-2" onClick={() => iniciarEdicion(r)}>Editar</button><button type="button" className="btn-ghost text-rose" disabled={eliminar.isPending} onClick={() => window.confirm("¿Eliminar definitivamente esta recaudación?") && eliminar.mutate(r.id)}>Eliminar</button></>}</td></tr>)}</tbody></table>{filas.length === 0 && <EstadoVacio texto="No hay recaudaciones para los filtros elegidos." />}</div>
     </Panel>
   </AppLayout>;

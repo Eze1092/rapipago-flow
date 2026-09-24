@@ -117,9 +117,12 @@ export async function obtenerResumenPorCajero(desde?: string, hasta?: string) {
   return (data ?? []) as { cajero: string; total: number; operaciones: number }[];
 }
 
-export type FiltroRecaudaciones = {
+export type FiltroFecha = {
   desde?: string;
   hasta?: string;
+};
+
+export type FiltroRecaudaciones = FiltroFecha & {
   bocaId?: string;
   cajero?: string;
 };
@@ -142,12 +145,34 @@ export async function obtenerRecaudaciones(filtro: FiltroRecaudaciones = {}) {
   return (data ?? []) as unknown as Recaudacion[];
 }
 
-export async function obtenerRetiros() {
-  const { data, error } = await supabase
+export async function obtenerSumaHistoricaRecaudada(): Promise<number> {
+  const pagina = 1000;
+  let total = 0;
+  let desde = 0;
+  for (;;) {
+    const { data, error } = await supabase
+      .from("recaudaciones")
+      .select("importe")
+      .neq("estado", "ANULADO")
+      .range(desde, desde + pagina - 1);
+    lanzar(error);
+    const filas = data ?? [];
+    total = filas.reduce((acc, r) => acc + Number(r.importe ?? 0), 0) + total;
+    if (filas.length < pagina) break;
+    desde += pagina;
+  }
+  return total;
+}
+
+export async function obtenerRetiros(filtro: FiltroFecha = {}) {
+  let q = supabase
     .from("retiros")
     .select("*, retiro_bocas(boca_id, bocas(codigo)), acreditaciones(id, importe, fecha_acreditacion, estado)")
     .order("fecha", { ascending: false })
     .limit(300);
+  if (filtro.desde) q = q.gte("fecha", filtro.desde);
+  if (filtro.hasta) q = q.lte("fecha", filtro.hasta);
+  const { data, error } = await q;
   lanzar(error);
   return (data ?? []) as unknown as (Retiro & {
     retiro_bocas: { boca_id: string; bocas: { codigo: string } | null }[];
@@ -155,12 +180,15 @@ export async function obtenerRetiros() {
   })[];
 }
 
-export async function obtenerAcreditaciones() {
-  const { data, error } = await supabase
+export async function obtenerAcreditaciones(filtro: FiltroFecha = {}) {
+  let q = supabase
     .from("acreditaciones")
     .select("*, retiros(fecha, importe_retirado, remito)")
     .order("fecha_acreditacion", { ascending: false })
     .limit(300);
+  if (filtro.desde) q = q.gte("fecha_acreditacion", filtro.desde);
+  if (filtro.hasta) q = q.lte("fecha_acreditacion", filtro.hasta);
+  const { data, error } = await q;
   lanzar(error);
   return (data ?? []) as unknown as (Acreditacion & {
     retiros: { fecha: string; importe_retirado: number; remito: string } | null;

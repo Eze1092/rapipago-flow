@@ -35,7 +35,10 @@ function CajeroAutomatico() {
     setCargando(false);
   };
   useEffect(() => { void cargar(); }, []);
-  useEffect(() => { if (!form.boca_id && bocas.data?.length) setForm((f) => ({ ...f, boca_id: bocas.data[0].id })); }, [bocas.data, form.boca_id]);
+  useEffect(() => {
+    const primeraBoca = bocas.data?.[0]?.id;
+    if (!form.boca_id && primeraBoca) setForm((f) => ({ ...f, boca_id: primeraBoca }));
+  }, [bocas.data, form.boca_id]);
 
   const guardar = useMutation({
     mutationFn: async (valor: typeof form) => {
